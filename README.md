@@ -10,6 +10,7 @@ This is very simple. Here i'm using this free API [json-placeholder](https://jso
 4. Checked if teh status code of the endpoint was successful.
 5. Putting in the content varible the response as string.
 6. And now, deserializing the content(now string) to the model. Like this we can manipulate it in our app.
+7. Now the last part. A foreach to show the results in the console.
 
 Simple, right?
 
