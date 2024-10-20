@@ -16,7 +16,7 @@ Simples, né?
 
 Você também pode fazer isso, mãos à obra!
 
-#English
+# English
 ## Consuming external API
 
 This is very simple. Here i'm using this free API [Json Placeholder](https://jsonplaceholder.typicode.com/) and showing the results in the console. This is a C# console app.
