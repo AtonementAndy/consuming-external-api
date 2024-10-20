@@ -4,7 +4,7 @@ This is very simple. Here i'm using this free API [json-placeholder](https://jso
 
 ### How can we explain it?
 
-1. First thing i did was to determine which API i would use and i Found the one up here, Json Placeholder.
+1. First thing i did was to determine which API i would use and i've found the one up here, Json Placeholder.
 2. I created a base URL to consume.
 3. Created a variable named "response" to asyncronosly get the endpoint.
 4. Checked if teh status code of the endpoint was successful.
