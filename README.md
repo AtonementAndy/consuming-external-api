@@ -1,6 +1,6 @@
 # Consuming external API
 
-This is very simple. Here i'm using this free API [json-placeholder](https://jsonplaceholder.typicode.com/) and showing the results in the console. This is a console app usng C#.
+This is very simple. Here i'm using this free API [json-placeholder](https://jsonplaceholder.typicode.com/) and showing the results in the console. This is a C# console app.
 
 ### How can we explain it?
 
