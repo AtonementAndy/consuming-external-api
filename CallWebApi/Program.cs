@@ -32,7 +32,7 @@ try
 catch (Exception ex)
 {
     Console.WriteLine("Somehow, it was not possible to complete the Task!");
-    Console.WriteLine($"{ex.Source}\n{ex.StackTrace}");
+    Console.WriteLine($"{ex.Message}\n{ex.StackTrace}");
 }
 
 
