@@ -1,0 +1,15 @@
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\bin\Debug\net8.0\CallWebApi.exe
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\bin\Debug\net8.0\CallWebApi.deps.json
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\bin\Debug\net8.0\CallWebApi.runtimeconfig.json
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\bin\Debug\net8.0\CallWebApi.dll
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\bin\Debug\net8.0\CallWebApi.pdb
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.AssemblyInfoInputs.cache
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.AssemblyInfo.cs
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.csproj.CoreCompileInputs.cache
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.sourcelink.json
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.dll
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\refint\CallWebApi.dll
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.pdb
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\CallWebApi.genruntimeconfig.cache
+C:\Users\WSFurnas\Documents\Programming\consuming-external-api\CallWebApi\obj\Debug\net8.0\ref\CallWebApi.dll
