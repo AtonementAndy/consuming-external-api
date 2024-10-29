@@ -23,7 +23,7 @@ try
             foreach (var user in users)
             {
                 Console.WriteLine($"Id: {user?.Id}\nName: {user?.Name}\nUsername: {user?.Username}\nEmail: {user?.Email}\nPhone: {user?.Phone}\nWebsite: {user?.Website}" +
-                $"\nAddress:\n{user?.Address.Street}, Suite: {user?.Address.Suite}, City: {user?.Address.City}, ZipCode: {user?.Address.ZipCode} \n" +
+                $"\nAddress: {user?.Address.Street}, Suite: {user?.Address.Suite}, City: {user?.Address.City}, ZipCode: {user?.Address.ZipCode} \n" +
                 $"Latitude: {user?.Address.Geo.Lat}, Longitude: {user?.Address.Geo.Lng}\n");
             }
         }
@@ -32,7 +32,7 @@ try
 catch (Exception ex)
 {
     Console.WriteLine("Somehow, it was not possible to complete the Task!");
-    Console.WriteLine($"{ex.Message}\n{ex.StackTrace}");
+    Console.WriteLine($"{ex.Source}\n{ex.StackTrace}");
 }
 
 
