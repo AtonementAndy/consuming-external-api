@@ -1,150 +1,125 @@
 # Consuming an External API with `IHttpClientFactory`
 
 > **External API:** [JSONPlaceholder](https://jsonplaceholder.typicode.com/)
-> **Stack:** .NET 8 (Console Application) · `Microsoft.Extensions.Hosting` · `Microsoft.Extensions.Http`
+> **Stack:** .NET 8 (Console Application) · `Microsoft.Extensions.Hosting` · `Microsoft.Extensions.Http` · `xUnit` · `Moq`
 
 ---
 
+## 📌 Overview
 
-# 📌 Overview
+This repository demonstrates a **production-grade** approach to consuming an external HTTP API in .NET. 
 
-This console application demonstrates, in a **professional way**, how to consume an external HTTP API in .NET without falling into the classic **Socket Exhaustion** problem.
-
-The original version of the project created `HttpClient` instances manually (`new HttpClient()`), which — depending on request volume — exhausts the operating system's sockets and crashes the application. The adopted solution was to migrate to **`IHttpClientFactory`**, which manages the `HttpClientHandler` lifecycle and the connection pool safely.
+The original version of this project created `HttpClient` instances manually (`new HttpClient()`), which — depending on request volume — exhausts the operating system's sockets and crashes the application. The adopted solution migrates to **`IHttpClientFactory`**, utilizing **Typed Clients**, Dependency Injection, and robust configuration management to ensure high performance, testability, and security.
 
 ---
 
-
-# 🧨 The original problem: Socket Exhaustion
+## 🧨 The original problem: Socket Exhaustion
 
 ### What is it?
 
-When you do:
+When you create a new `HttpClient` manually and dispose of it, the underlying TCP socket is **NOT released immediately**. It remains in the `TIME_WAIT` state for a period defined by the operating system (default: ~240s on Windows / ~60s on Linux).
 
-```csharp
-using var client = new HttpClient();
-```
+In high-throughput scenarios (workers, APIs, loops), sockets accumulate until the available ephemeral port range is exhausted, resulting in `SocketException: Only one usage of each socket address is normally permitted`. This is the classic Socket Exhaustion.
 
-The HttpClient is disposed at the end of the block, but the underlying TCP socket is NOT released immediately. It remains in the TIME_WAIT state for a period defined by the operating system (default: ~240s on Windows / ~60s on Linux).
+### Why doesn't `using` solve it?
 
-In a scenario with:
-- Many requests per second;
-- Long-running services (workers, APIs, jobs);
-- Loops calling the external API;
+Because the problem is **not in the `HttpClient`** — it's in the internal handler (`HttpClientHandler` → `SocketsHttpHandler`). Recreating the `HttpClient` on every use also recreates the handler and, consequently, the socket.
 
-Sockets accumulate until the available ephemeral port range is exhausted. Result:
+---
 
-```bash
-System.Net.Sockets.SocketException:
-Only one usage of each socket address is normally permitted
-```
-This is Socket Exhaustion.
+## ✅ The solution: `IHttpClientFactory` + Typed Clients
 
-## Why doesn't `using` solve it?
-Because the problem is not in the `HttpClient` — it's in the internal handler (`HttpClientHandler` → `SocketsHttpHandler`). Recreating the `HttpClient` on every use also recreates the handler and, consequently, the socket.
+Introduced in .NET Core 2.1, `IHttpClientFactory` solves the problem, and we've implemented it using the **Typed Client** pattern for maximum architectural cleanliness:
 
-
-# ✅ The solution: `IHttpClientFactory`
-
-Introduced in .NET Core 2.1, IHttpClientFactory solves the problem because:
 | Benefit | How it works |
 | :--- | :--- |
 | **Connection pool** | `HttpClientHandler` instances are reused internally |
 | **Controlled lifecycle** | Handlers rotate every 2 minutes (recycling) |
 | **Refreshed DNS** | Since the handler is recycled, IP changes are respected |
-| **Centralized configuration** | `BaseAddress`, headers, timeouts, etc. in one place |
-| **Testability** | Easy to mock via DI |
-| **Extensible** | Integrates with logging, custom handlers, etc. |
+| **Centralized configuration** | Injected seamlessly via `appsettings.json` and `IOptions` |
+| **Testability** | Easy to mock `HttpMessageHandler` for unit tests |
+| **Separation of Concerns** | HTTP logic isolated inside a dedicated `UserService` |
 
+> ⚠️ **Golden rule:** the `HttpClient` returned by the factory **is disposable**, but in the Typed Client pattern, the DI container manages its lifecycle. You must **never** call `_httpClient.Dispose()` manually inside your services.
 
-# 🧱 Technologies and packages
+---
+
+## 🧱 Technologies and packages
+
 | Package | Purpose |
 | :--- | :--- |
 | `Microsoft.Extensions.Hosting` | Generic host, DI, configuration, logging |
 | `Microsoft.Extensions.Http` | `AddHttpClient(...)` and `IHttpClientFactory` |
-| `System.Net.Http.Json` | `GetFromJsonAsync`, `PostAsJsonAsync` extensions |
+| `Microsoft.Extensions.Options` | Dynamic configuration binding (`appsettings.json`) |
+| `xUnit` & `Moq` | Unit testing and mocking framework |
 
-> `System.Net.Http.Json` ships with the .NET 5+ SDK — no installation needed.
+---
 
-# ⚙️ Pre-requisites
-- [.NET 8.0](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0)
+## ⚙️ Pre-requisites
+
+- .NET 8.0 SDK
 - Git
 - A terminal (PowerShell, Bash, zsh — any will do)
 
-```bash
-dotnet --version
-# 8.0.x
-```
-# 🚀 Step-by-step to run the project
+---
 
-## 1. Clone the repository
+## 🚀 Step-by-step to run the project
 
-```bash
-git clone https://github.com/AtonementAndy/consuming-external-api.git
-cd consuming-external-api/CallWebApi
-```
+1. **Clone the repository**
+   Open your terminal and clone the project to your local machine.
 
-## 2. Install the NuGet packages
+2. **Restore dependencies**
+   Run `dotnet restore` to install all the NuGet packages defined in the `.csproj` files.
 
-```bash
-dotnet add package Microsoft.Extensions.Hosting
-dotnet add package Microsoft.Extensions.Http
-```
+3. **Run the application**
+   Because this is a Solution with both the main app and a Test project, specify the project to run: `dotnet run --project CallWebApi`.
 
-## 3. Restore dependencies
+4. **Run the Unit Tests**
+   Run `dotnet test` to execute the test suite (xUnit + Moq) and verify the service behaves correctly against mocked HTTP responses.
 
-```bash
-dotnet restore
-```
+5. **Publish as an executable (Optional)**
+   Run `dotnet publish -c Release -o ./publish` and execute the generated binary.
 
-## 4. Run
+---
 
-```bash
-dotnet run
-```
+## 📁 Project structure
 
-## 5. (Optional) Publish as an executable
+| Directory | Content |
+| :--- | :--- |
+| `CallWebApi/Configuration/` | `ApiSettings.cs` (Binds appsettings.json) |
+| `CallWebApi/Models/` | `Address`, `Geo`, `Post`, `User` |
+| `CallWebApi/Services/` | `IUserService`, `UserService` (Business logic) |
+| `CallWebApi/` | `Program.cs`, `appsettings.json`, `CallWebApi.csproj` |
+| `CallWebApi.Tests/` | `UserServiceTests.cs` (xUnit tests) |
 
-```bash
-dotnet publish -c Release -o ./publish
-./publish/CallWebApi
-```
+---
 
+## 🌐 API consumed
+- **Base URL:** `https://jsonplaceholder.typicode.com/`
+- **Endpoint:** `/users`
+- **Format:** JSON
+- **Authentication:** None (Public test API)
 
-# 📁 Project structure
-```text
-CallWebApi/
-├── Configuration/
-│   └── ApiSettings.cs
-├── Models/
-│   ├── Address.cs
-│   ├── Geo.cs
-│   ├── Post.cs
-│   └── User.cs
-├── Services/
-│   ├── IUserService.cs
-│   └── UserService.cs
-├── Program.cs
-├── appsettings.json
-└── CallWebApi.csproj
-```
+---
 
+## 🎯 What was solved
 
-# 🌐 API consumed
-- **Base URL**: `https://jsonplaceholder.typicode.com/`
-- **Endpoint**: `/users`
-- **Format:** `JSON`
-- **Authentication**: `none (public test API)`
-
-
-# 🎯 What was solved
-| Before (`new HttpClient`) | After (`IHttpClientFactory`) |
+| Before (`new HttpClient`) | After (Typed `IHttpClientFactory`) |
 | :--- | :--- |
 | Sockets exhausted under high load | Reused connection pool |
 | DNS "frozen" at first resolution | Automatic handler recycling |
-| Configuration scattered across code | Centralized in `ConfigureServices` |
-| Hard to test | Easy to mock via DI |
-| No lifecycle management | Built-in handler rotation and disposal |
+| Configuration hardcoded | Centralized in `appsettings.json` & `IOptions` |
+| Hard to test | 100% testable via `Moq` and `HttpMessageHandler` |
+| Spaghetti code in `Main` | Clean architecture with `IUserService` |
 
+---
+
+## 🛠️ Next steps (Future Improvements)
+
+1. **Resilience:** Add `Microsoft.Extensions.Http.Polly` to implement Retry and Circuit Breaker policies.
+2. **Caching:** Implement `IMemoryCache` or Redis for frequently requested data.
+3. **Docker:** Containerize the application using a multi-stage `Dockerfile`.
+
+---
 
 Made with ❤️ by [AtonementAndy](https://github.com/AtonementAndy)
