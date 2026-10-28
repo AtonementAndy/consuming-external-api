@@ -114,12 +114,18 @@ dotnet publish -c Release -o ./publish
 # 📁 Project structure
 ```text
 CallWebApi/
+├── Configuration/
+│   └── ApiSettings.cs
 ├── Models/
 │   ├── Address.cs
 │   ├── Geo.cs
 │   ├── Post.cs
 │   └── User.cs
+├── Services/
+│   ├── IUserService.cs
+│   └── UserService.cs
 ├── Program.cs
+├── appsettings.json
 └── CallWebApi.csproj
 ```
 
