@@ -1,40 +1,35 @@
-﻿using System.Text.Json;
-using CallWebApi.Model;
+﻿using CallWebApi.Model;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net.Http.Json;
 
-HttpClient client = new()
-{
-    BaseAddress = new Uri("https://jsonplaceholder.typicode.com/")
-};
+var host = Host.CreateDefaultBuilder(args)
+    .ConfigureServices(services =>
+    {
+        services.AddHttpClient("UserApi", client =>
+        {
+            client.BaseAddress = new Uri("https://jsonplaceholder.typicode.com/");
+        });
+    })
+    .Build();
 
-var response = await client.GetAsync("/users");
-Console.WriteLine($"Out: {((int)response.StatusCode)}"); //Just to check the status code
+var httpClientFactory = host.Services.GetRequiredService<IHttpClientFactory>();
 
 try
 {
-    if (response.IsSuccessStatusCode)
+    var client = httpClientFactory.CreateClient("UserApi");
+
+    var users = await client.GetFromJsonAsync<IEnumerable<User>>("/users")
+        ?? throw new NullReferenceException();
+
+    foreach (var user in users)
     {
-        Console.WriteLine($"In: {((int)response.StatusCode)}");
-
-        var content = await response.Content.ReadAsStringAsync();
-        var users = JsonSerializer.Deserialize<List<User>>(content);
-
-        if (users is not null)
-        {
-            foreach (var user in users)
-            {
-                Console.WriteLine($"Id: {user?.Id}\nName: {user?.Name}\nUsername: {user?.Username}\nEmail: {user?.Email}\nPhone: {user?.Phone}\nWebsite: {user?.Website}" +
-                $"\nAddress: {user?.Address.Street}, Suite: {user?.Address.Suite}, City: {user?.Address.City}, ZipCode: {user?.Address.ZipCode} \n" +
-                $"Latitude: {user?.Address.Geo.Lat}, Longitude: {user?.Address.Geo.Lng}\n");
-            }
-        }
+        Console.WriteLine($"Id: {user?.Id}\nName: {user?.Name}\nUsername: {user?.Username}\nEmail: {user?.Email}\nPhone: {user?.Phone}\nWebsite: {user?.Website}" +
+        $"\nAddress: {user?.Address.Street}, Suite: {user?.Address.Suite}, City: {user?.Address.City}, ZipCode: {user?.Address.ZipCode} \n" +
+        $"Latitude: {user?.Address.Geo.Lat}, Longitude: {user?.Address.Geo.Lng}\n");
     }
 }
-catch (Exception ex)
+catch (NullReferenceException ex)
 {
-    Console.WriteLine("Somehow, it was not possible to complete the Task!");
-    Console.WriteLine($"{ex.Source}\n{ex.StackTrace}");
+    Console.WriteLine($"Erro na requisição: {ex.Message}");
 }
-
-
-//Console.WriteLine($"UserId: {posts?.UserId}, \n Id: {posts?.Id}, \n Title: {posts?.Title}, \n Posts: {posts?.Body}");
-
