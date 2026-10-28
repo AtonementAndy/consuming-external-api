@@ -1,36 +1,144 @@
-# Consumindo API externa
+# Consuming an External API with `IHttpClientFactory`
 
-É muito simples. Aqui estou usando esta API gratuita [Json Placeholder](https://jsonplaceholder.typicode.com/) e exibindo os resultados no console. Estou usando um aplicativo de console em C#.
+> **External API:** [JSONPlaceholder](https://jsonplaceholder.typicode.com/)
+> **Stack:** .NET 8 (Console Application) · `Microsoft.Extensions.Hosting` · `Microsoft.Extensions.Http`
 
-Como podemos explicar isso?
+---
 
-1. A primeira coisa que fiz foi determinar qual API eu usaria, e encontrei esta aqui do link acima, Json Placeholder.
-2. Criei uma URL base para ser consumida.
-3. Criei uma variável chamada "response" para obter o endpoint de forma assíncrona.
-4. Verifiquei se o status code do endpoint foi bem-sucedido.
-5. Coloquei na variável "content" a reposta como string.
-6. E agora, desserializando o conteúdo (agora string) para a Model. Assim, podemos manipular as informações no nosso aplicativo.
-7. Agora, a última parte: um foreach para mostrar os resultados no console.
 
-Simples, né?
+# 📌 Overview
 
-Você também pode fazer isso, mãos à obra!
+This console application demonstrates, in a **professional way**, how to consume an external HTTP API in .NET without falling into the classic **Socket Exhaustion** problem.
 
-# English
-## Consuming external API
+The original version of the project created `HttpClient` instances manually (`new HttpClient()`), which — depending on request volume — exhausts the operating system's sockets and crashes the application. The adopted solution was to migrate to **`IHttpClientFactory`**, which manages the `HttpClientHandler` lifecycle and the connection pool safely.
 
-This is very simple. Here i'm using this free API [Json Placeholder](https://jsonplaceholder.typicode.com/) and showing the results in the console. This is a C# console app.
+---
 
-### How can we explain it?
 
-1. First thing i did was to determine which API i would use and i've found the one up here, Json Placeholder.
-2. I created a base URL to consume.
-3. Created a variable named "response" to asyncronosly get the endpoint.
-4. Checked if teh status code of the endpoint was successful.
-5. Putting in the content varible the response as string.
-6. And now, deserializing the content(now string) to the model. Like this we can manipulate it in our app.
-7. Now the last part. A foreach to show the results in the console.
+# 🧨 The original problem: Socket Exhaustion
 
-Simple, right?
+### What is it?
 
-You can do this too, hands on!
+When you do:
+
+```csharp
+using var client = new HttpClient();
+```
+
+The HttpClient is disposed at the end of the block, but the underlying TCP socket is NOT released immediately. It remains in the TIME_WAIT state for a period defined by the operating system (default: ~240s on Windows / ~60s on Linux).
+
+In a scenario with:
+- Many requests per second;
+- Long-running services (workers, APIs, jobs);
+- Loops calling the external API;
+
+Sockets accumulate until the available ephemeral port range is exhausted. Result:
+
+```bash
+System.Net.Sockets.SocketException:
+Only one usage of each socket address is normally permitted
+```
+This is Socket Exhaustion.
+
+## Why doesn't `using` solve it?
+Because the problem is not in the `HttpClient` — it's in the internal handler (`HttpClientHandler` → `SocketsHttpHandler`). Recreating the `HttpClient` on every use also recreates the handler and, consequently, the socket.
+
+
+# ✅ The solution: `IHttpClientFactory`
+
+Introduced in .NET Core 2.1, IHttpClientFactory solves the problem because:
+| Benefit | How it works |
+| :--- | :--- |
+| **Connection pool** | `HttpClientHandler` instances are reused internally |
+| **Controlled lifecycle** | Handlers rotate every 2 minutes (recycling) |
+| **Refreshed DNS** | Since the handler is recycled, IP changes are respected |
+| **Centralized configuration** | `BaseAddress`, headers, timeouts, etc. in one place |
+| **Testability** | Easy to mock via DI |
+| **Extensible** | Integrates with logging, custom handlers, etc. |
+
+
+# 🧱 Technologies and packages
+| Package | Purpose |
+| :--- | :--- |
+| `Microsoft.Extensions.Hosting` | Generic host, DI, configuration, logging |
+| `Microsoft.Extensions.Http` | `AddHttpClient(...)` and `IHttpClientFactory` |
+| `System.Net.Http.Json` | `GetFromJsonAsync`, `PostAsJsonAsync` extensions |
+
+> `System.Net.Http.Json` ships with the .NET 5+ SDK — no installation needed.
+
+# ⚙️ Pre-requisites
+- [.NET 8.0](https://dotnet.microsoft.com/pt-br/download/dotnet/8.0)
+- Git
+- A terminal (PowerShell, Bash, zsh — any will do)
+
+```bash
+dotnet --version
+# 8.0.x
+```
+# 🚀 Step-by-step to run the project
+
+## 1. Clone the repository
+
+```bash
+git clone https://github.com/AtonementAndy/consuming-external-api.git
+cd consuming-external-api/CallWebApi
+```
+
+## 2. Install the NuGet packages
+
+```bash
+dotnet add package Microsoft.Extensions.Hosting
+dotnet add package Microsoft.Extensions.Http
+```
+
+## 3. Restore dependencies
+
+```bash
+dotnet restore
+```
+
+## 4. Run
+
+```bash
+dotnet run
+```
+
+## 5. (Optional) Publish as an executable
+
+```bash
+dotnet publish -c Release -o ./publish
+./publish/CallWebApi
+```
+
+
+# 📁 Project structure
+```text
+CallWebApi/
+├── Models/
+│   ├── Address.cs
+│   ├── Geo.cs
+│   ├── Post.cs
+│   └── User.cs
+├── Program.cs
+└── CallWebApi.csproj
+```
+
+
+# 🌐 API consumed
+- **Base URL**: `https://jsonplaceholder.typicode.com/`
+- **Endpoint**: `/users`
+- **Format:** `JSON`
+- **Authentication**: `none (public test API)`
+
+
+# 🎯 What was solved
+| Before (`new HttpClient`) | After (`IHttpClientFactory`) |
+| :--- | :--- |
+| Sockets exhausted under high load | Reused connection pool |
+| DNS "frozen" at first resolution | Automatic handler recycling |
+| Configuration scattered across code | Centralized in `ConfigureServices` |
+| Hard to test | Easy to mock via DI |
+| No lifecycle management | Built-in handler rotation and disposal |
+
+
+Made with ❤️ by [AtonementAndy](https://github.com/AtonementAndy)
