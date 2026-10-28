@@ -1,6 +1,6 @@
-using System.Text.Json.Serialization;
+using CallWebApi.Model;
 
-namespace CallWebApi.Model
+namespace CallWebApi.Models
 {
     public class User
     {

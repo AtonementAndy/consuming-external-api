@@ -1,35 +1,53 @@
-﻿using CallWebApi.Model;
-using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using System.Net.Http.Json;
+using CallWebApi.Configuration;
+using CallWebApi.Services;
+using Microsoft.Extensions.Logging;
 
 var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices(services =>
+    .ConfigureServices((context, services) =>
     {
-        services.AddHttpClient("UserApi", client =>
+        // Binding the appsettings.json
+        services.Configure<ApiSettings>(context.Configuration.GetSection(ApiSettings.SectionName));
+
+        // Registering Typed Client(IHttpClientFactory under the hood)
+        services.AddHttpClient<IUserService, UserService>((ServiceProvider, client) =>
         {
-            client.BaseAddress = new Uri("https://jsonplaceholder.typicode.com/");
+            var baseUrl = context.Configuration[$"{ApiSettings.SectionName}:BaseUrl"];
+
+            if (string.IsNullOrEmpty(baseUrl))
+            {
+                baseUrl = "https://jsonplaceholder.typicode.com/";
+            }
+
+            client.BaseAddress = new Uri(baseUrl);
         });
+
+        services.AddTransient<IUserService, UserService>();
     })
     .Build();
 
-var httpClientFactory = host.Services.GetRequiredService<IHttpClientFactory>();
+var logger = host.Services.GetRequiredService<ILogger<Program>>();
+var userService = host.Services.GetRequiredService<IUserService>();
 
 try
 {
-    var client = httpClientFactory.CreateClient("UserApi");
-
-    var users = await client.GetFromJsonAsync<IEnumerable<User>>("/users")
-        ?? throw new NullReferenceException();
+    var users = await userService.GetUsersAsync(CancellationToken.None);
 
     foreach (var user in users)
     {
-        Console.WriteLine($"Id: {user?.Id}\nName: {user?.Name}\nUsername: {user?.Username}\nEmail: {user?.Email}\nPhone: {user?.Phone}\nWebsite: {user?.Website}" +
-        $"\nAddress: {user?.Address.Street}, Suite: {user?.Address.Suite}, City: {user?.Address.City}, ZipCode: {user?.Address.ZipCode} \n" +
-        $"Latitude: {user?.Address.Geo.Lat}, Longitude: {user?.Address.Geo.Lng}\n");
+        Console.WriteLine($"Id: {user.Id}\n" +
+            $"Name: {user.Name}\n" +
+            $"Username: {user.Username}\n" +
+            $"Email: {user.Email}\n" +
+            $"Phone: {user.Phone}\n" +
+            $"Website: {user.Website}\n" +
+            $"Address: {user.Address.Street}, Suite: {user.Address.Suite}, " +
+            $"City: {user.Address.City}, ZipCode: {user.Address.ZipCode}\n" +
+            $"Latitude: {user.Address.Geo.Lat}, Longitude: {user.Address.Geo.Lng}\n");
     }
 }
-catch (NullReferenceException ex)
+catch (Exception ex)
 {
-    Console.WriteLine($"Erro na requisição: {ex.Message}");
+    logger.LogCritical(ex, "The application failed while executing.");
 }

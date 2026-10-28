@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "K1uzO7fNuu0=",
+  "dgSpecHash": "WbGdOMqXako=",
   "success": true,
   "projectFilePath": "C:\\Users\\Andy\\Documents\\Prog\\aspnet\\Studies\\consuming-external-api\\CallWebApi\\CallWebApi.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\Andy\\.nuget\\packages\\coverlet.collector\\10.1.0\\coverlet.collector.10.1.0.nupkg.sha512",
     "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration\\10.0.14\\microsoft.extensions.configuration.10.0.14.nupkg.sha512",
     "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration.abstractions\\10.0.14\\microsoft.extensions.configuration.abstractions.10.0.14.nupkg.sha512",
     "C:\\Users\\Andy\\.nuget\\packages\\microsoft.extensions.configuration.binder\\10.0.14\\microsoft.extensions.configuration.binder.10.0.14.nupkg.sha512",

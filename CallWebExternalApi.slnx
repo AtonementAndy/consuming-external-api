@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CallWebApi/CallWebApi.csproj" />
+  <Project Path="CallWebApi.Tests/CallWebApi.Tests.csproj" />
+</Solution>
